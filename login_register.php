@@ -2,6 +2,14 @@
 session_start();
 require_once 'config.php';
 
+if (!$dbConnected) {
+    $_SESSION['login_error'] = 'The database server is unavailable right now. Please try again later.';
+    $_SESSION['register_error'] = 'The database server is unavailable right now. Please try again later.';
+    $_SESSION['active_form'] = 'login';
+    header('Location: index.php');
+    exit();
+}
+
 if (isset($_POST['register'])) {
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');

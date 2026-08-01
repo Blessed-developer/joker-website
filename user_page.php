@@ -21,6 +21,7 @@ foreach ($allowedFolders as $folder) {
 }
 
 $metadata = [];
+$dbMessage = '';
 if (is_file($metaFile)) {
     $metadataContent = file_get_contents($metaFile);
     $metadata = json_decode($metadataContent, true) ?? [];
@@ -29,45 +30,49 @@ if (is_file($metaFile)) {
 $currentUserId = (string) ($_SESSION['user_id'] ?? '');
 
 $folderFiles = [];
-foreach ($allowedFolders as $folder) {
-    $path = $baseUploadDir . DIRECTORY_SEPARATOR . $folder;
-    $files = array_diff(scandir($path), ['.', '..']);
-    $activeFiles = [];
+if (!$dbConnected || !($conn instanceof mysqli)) {
+    $dbMessage = 'Database connection is unavailable. Please start MySQL and refresh the page.';
+} else {
+    foreach ($allowedFolders as $folder) {
+        $path = $baseUploadDir . DIRECTORY_SEPARATOR . $folder;
+        $files = array_diff(scandir($path), ['.', '..']);
+        $activeFiles = [];
 
-    foreach ($files as $file) {
-        $key = $folder . '/' . $file;
-        $meta = $metadata[$key] ?? null;
-        if ($meta === null || empty($meta['access'][$currentUserId])) {
-            continue;
+        foreach ($files as $file) {
+            $key = $folder . '/' . $file;
+            $meta = $metadata[$key] ?? null;
+            if ($meta === null || empty($meta['access'][$currentUserId])) {
+                continue;
+            }
+
+            $accessInfo = $meta['access'][$currentUserId];
+            $startAt = $accessInfo['start_at'] ?? null;
+            $expiresAt = $accessInfo['expires_at'] ?? null;
+            $now = time();
+            // require that at least 1 full day remains (days left > 0)
+            if ($startAt !== null && $now < $startAt) {
+                continue;
+            }
+            if ($expiresAt === null) {
+                continue;
+            }
+            $daysLeft = (int) floor(($expiresAt - $now) / 86400);
+            if ($daysLeft <= 0) {
+                continue;
+            }
+
+            $activeFiles[] = [
+                'name' => $file,
+                'payment_date' => $accessInfo['payment_date'] ?? null,
+                'start_at' => $startAt,
+                'expiry_date' => $accessInfo['expiry_date'] ?? null,
+                'expires_at' => $expiresAt,
+                'days_left' => $daysLeft,
+            ];
         }
 
-        $accessInfo = $meta['access'][$currentUserId];
-        $startAt = $accessInfo['start_at'] ?? null;
-        $expiresAt = $accessInfo['expires_at'] ?? null;
-        $now = time();
-        // require that at least 1 full day remains (days left > 0)
-        if ($startAt !== null && $now < $startAt) {
-            continue;
-        }
-        if ($expiresAt === null) {
-            continue;
-        }
-        $daysLeft = (int) floor(($expiresAt - $now) / 86400);
-        if ($daysLeft <= 0) {
-            continue;
-        }
-
-        $activeFiles[] = [
-            'name' => $file,
-            'payment_date' => $accessInfo['payment_date'] ?? null,
-            'start_at' => $startAt,
-            'expiry_date' => $accessInfo['expiry_date'] ?? null,
-            'expires_at' => $expiresAt,
-            'days_left' => $daysLeft,
-        ];
+        $folderFiles[$folder] = $activeFiles;
     }
-
-    $folderFiles[$folder] = $activeFiles;
 }
 ?>
 
@@ -181,6 +186,10 @@ foreach ($allowedFolders as $folder) {
             </div>
             <button onclick="window.location.href='logout.php'">Logout</button>
         </div>
+
+        <?php if ($dbMessage !== ''): ?>
+            <div class="message" style="background:#fff4f4;border-color:#f5b4b4;color:#8a2d2d;"><?= htmlspecialchars($dbMessage, ENT_QUOTES, 'UTF-8'); ?></div>
+        <?php endif; ?>
 
         <div class="folder-grid">
             <?php foreach ($folderFiles as $folder => $files): ?>

@@ -21,6 +21,7 @@ function isActiveForm($formName, $activeForm) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,6 +29,7 @@ function isActiveForm($formName, $activeForm) {
     <link rel="stylesheet" href="style.css">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 </head>
+
 <body>
     <div class="container">
         <div class="form-box <?= isActiveForm('login', $activeForm) ?>" id="login-form">
@@ -47,7 +49,8 @@ function isActiveForm($formName, $activeForm) {
                     <a href="#">Forgot Password?</a>
                 </div>
                 <button class="btn" type="submit" name="login">Login</button>
-                <p class="register-link">Don't have an account? <a href="#" onclick="showForm('register-form')">Register</a></p>
+                <p class="register-link">Don't have an account? <a href="#"
+                        onclick="showForm('register-form')">Register</a></p>
             </form>
         </div>
 
@@ -73,11 +76,13 @@ function isActiveForm($formName, $activeForm) {
                     <option value="2">User</option>
                 </select>
                 <button class="btn" type="submit" name="register">Register</button>
-                <p class="register-link">Already have an account? <a href="#" onclick="showForm('login-form')">Login</a></p>
+                <p class="register-link">Already have an account? <a href="#" onclick="showForm('login-form')">Login</a>
+                </p>
             </form>
         </div>
     </div>
 
     <script src="script.js"></script>
 </body>
+
 </html>

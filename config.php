@@ -1,12 +1,21 @@
 <?php
+mysqli_report(MYSQLI_REPORT_OFF);
+
 $host = 'localhost';
 $user = 'root';
 $password = '';
 $database = 'eazy_dp';
 
-$conn = new mysqli($host, $user, $password, $database);
+$dbConnected = false;
+$dbError = '';
+$conn = null;
 
-if ($conn->connect_error) {
-    die('Database connection failed: ' . $conn->connect_error);
+$conn = @new mysqli($host, $user, $password, $database);
+
+if ($conn && !$conn->connect_error) {
+    $dbConnected = true;
+} else {
+    $dbError = $conn ? $conn->connect_error : 'Unable to initialize database connection.';
+    $conn = null;
 }
 ?>

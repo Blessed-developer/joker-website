@@ -24,16 +24,22 @@ foreach ($allowedFolders as $folder) {
 }
 
 $users = [];
-$userStmt = $conn->prepare('SELECT id, name, email, role FROM users');
-if ($userStmt) {
-    $userStmt->execute();
-    $userResult = $userStmt->get_result();
-    while ($userRow = $userResult->fetch_assoc()) {
-        if ($userRow['role'] !== 'admin' && $userRow['role'] !== '1') {
-            $users[] = $userRow;
+$dbMessage = '';
+
+if (!$dbConnected || !($conn instanceof mysqli)) {
+    $dbMessage = 'Database connection is unavailable. Please start MySQL and refresh the page.';
+} else {
+    $userStmt = $conn->prepare('SELECT id, name, email, role FROM users');
+    if ($userStmt) {
+        $userStmt->execute();
+        $userResult = $userStmt->get_result();
+        while ($userRow = $userResult->fetch_assoc()) {
+            if ($userRow['role'] !== 'admin' && $userRow['role'] !== '1') {
+                $users[] = $userRow;
+            }
         }
+        $userStmt->close();
     }
-    $userStmt->close();
 }
 
 $metadata = [];
@@ -202,6 +208,10 @@ foreach ($allowedFolders as $folder) {
 
         <?php if ($message !== ''): ?>
             <div class="message"><?= htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?></div>
+        <?php endif; ?>
+
+        <?php if ($dbMessage !== ''): ?>
+            <div class="message"><?= htmlspecialchars($dbMessage, ENT_QUOTES, 'UTF-8'); ?></div>
         <?php endif; ?>
 
         <div class="box">
